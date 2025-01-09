@@ -12,6 +12,7 @@ import {
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import Image from "next/image";
+import { signOut } from "firebase/auth";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -57,7 +58,7 @@ export default function Login() {
           description: "Successfully Signed up!",
           className: "text-primary",
         });
-        router.push("/");
+        router.push("/edit");
       })
       .catch((err) => {
         if (err.code === "auth/email-already-in-use") {
@@ -103,7 +104,7 @@ export default function Login() {
       });
   };
 
-  const googleLogin = () => {
+  const googleLogin = (firstTime: boolean) => {
     const provider = new GoogleAuthProvider();
     auth.useDeviceLanguage();
     provider.setCustomParameters({
@@ -116,9 +117,22 @@ export default function Login() {
           description: "Successfully logged in!",
           className: "text-primary",
         });
+        if (firstTime) router.push("/edit");
+        else router.push("/");
       })
       .catch((err) => {
         console.log(err.message);
+      });
+  };
+
+  // temp
+  const logout = () => {
+    signOut(auth)
+      .then(() => {
+        console.log("sign out");
+      })
+      .catch((error) => {
+        console.log(error.message);
       });
   };
 
@@ -154,7 +168,7 @@ export default function Login() {
                 alt="Google button"
                 width={200}
                 height={50}
-                onClick={() => googleLogin()}
+                onClick={() => googleLogin(false)}
               />
               <button
                 className="bg-primary p-2 rounded-md"
@@ -187,7 +201,7 @@ export default function Login() {
                 alt="Google button"
                 width={200}
                 height={50}
-                onClick={() => googleLogin()}
+                onClick={() => googleLogin(true)}
               />
               <button
                 className="bg-primary p-2 rounded-md"
