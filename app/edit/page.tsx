@@ -116,6 +116,8 @@ export default function Edit() {
       imageURL: imageURL,
       gender: gender,
       website: website,
+      followers: 0,
+      following: 0,
     });
     toast({
       title: "Success",
