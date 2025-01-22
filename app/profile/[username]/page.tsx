@@ -8,7 +8,6 @@ import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 import CreatePost from "@/app/createPost";
-import { profileEnd } from "console";
 
 export default function Profile({
   params,
@@ -164,7 +163,7 @@ export default function Profile({
               src={imageURL}
               width={110}
               height={110}
-              alt="Profile Pic"
+              alt="Profile picture"
               style={{
                 objectFit: "cover",
                 height: "110px",
