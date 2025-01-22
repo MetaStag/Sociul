@@ -116,8 +116,8 @@ export default function Edit() {
       imageURL: imageURL,
       gender: gender,
       website: website,
-      followers: 0,
-      following: 0,
+      followers: [],
+      following: [],
     });
     toast({
       title: "Success",
@@ -182,7 +182,7 @@ export default function Edit() {
           onChange={(e) => setWebsite(e.target.value)}
         />
         <button
-          className="bg-primary p-2 rounded-md"
+          className="bg-primary p-2 rounded-md hover:bg-secondary"
           onClick={() => handleSubmit()}
         >
           Continue to Profile

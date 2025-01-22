@@ -171,7 +171,7 @@ export default function Login() {
                 onClick={() => googleLogin(false)}
               />
               <button
-                className="bg-primary p-2 rounded-md"
+                className="bg-primary p-2 rounded-md hover:bg-secondary"
                 onClick={() => loginUser()}
               >
                 Submit
@@ -204,7 +204,7 @@ export default function Login() {
                 onClick={() => googleLogin(true)}
               />
               <button
-                className="bg-primary p-2 rounded-md"
+                className="bg-primary p-2 rounded-md hover:bg-secondary"
                 onClick={() => signupUser()}
               >
                 Submit

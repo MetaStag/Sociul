@@ -1,0 +1,210 @@
+"use client";
+
+import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { doc, collection, getDoc, getDocs, setDoc } from "firebase/firestore";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth, db } from "@/lib/firebase";
+import { useToast } from "@/hooks/use-toast";
+import CreatePost from "@/app/createPost";
+import { profileEnd } from "console";
+
+export default function Profile({
+  params,
+}: {
+  params: Promise<{ username: string }>;
+}) {
+  let ownUid = useRef("");
+  let profileUid = useRef("");
+  let username = useRef("");
+  const [followingUser, setFollowingUser] = useState(false);
+  const ownAccount = useRef(false);
+  const [loading, setLoading] = useState(true);
+  const [description, setDescription] = useState("");
+  const [imageURL, setImageURL] = useState("");
+  const [gender, setGender] = useState("");
+  const [website, setWebsite] = useState("");
+  const [followerCount, setFollowerCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
+  const { toast } = useToast();
+  const router = useRouter();
+
+  useEffect(() => {
+    const check = async () => {
+      username.current = (await params).username;
+      let found = false;
+      onAuthStateChanged(auth, async (user) => {
+        if (user) {
+          ownUid.current = user.uid;
+        } else {
+          return;
+        }
+      });
+      const querySnapshot = await getDocs(collection(db, "userData"));
+      querySnapshot.forEach((doc) => {
+        if (username.current === doc.data().username) {
+          found = true;
+          if (doc.id === ownUid.current) {
+            ownAccount.current = true;
+          }
+          const data = doc.data();
+          profileUid.current = doc.id;
+          setDescription(data.description);
+          setImageURL(data.imageURL);
+          setGender(data.gender);
+          setWebsite(data.website);
+          setFollowerCount(data.followers.length);
+          setFollowingCount(data.following.length);
+          if (data.followers.includes(ownUid.current)) setFollowingUser(true);
+          setLoading(false);
+        }
+      });
+      if (!found) {
+        toast({
+          title: "Invalid username",
+          description: "No profile with this username exists",
+          className: "text-destructive",
+        });
+        router.push("/");
+      }
+    };
+    check();
+  }, []);
+
+  const followUser = async () => {
+    let followers = [];
+    let following = [];
+    let docSnap = await getDoc(doc(db, "userData", profileUid.current));
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      followers = data.followers;
+    }
+    docSnap = await getDoc(doc(db, "userData", ownUid.current));
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      following = data.following;
+    }
+    setDoc(
+      doc(db, "userData", profileUid.current),
+      {
+        followers: [...followers, ownUid.current],
+      },
+      { merge: true }
+    );
+    setDoc(
+      doc(db, "userData", ownUid.current),
+      {
+        following: [...following, profileUid.current],
+      },
+      { merge: true }
+    );
+    setFollowingUser(true);
+    setFollowerCount(followerCount + 1);
+    toast({
+      title: "Success",
+      description: "Successfully followed",
+      className: "text-primary",
+    });
+  };
+
+  const unfollowUser = async () => {
+    let followers = [];
+    let following = [];
+    let docSnap = await getDoc(doc(db, "userData", profileUid.current));
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      followers = data.followers;
+    }
+    docSnap = await getDoc(doc(db, "userData", ownUid.current));
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      following = data.following;
+    }
+    followers = followers.filter((id: any) => id !== ownUid.current);
+    following = following.filter((id: any) => id !== profileUid.current);
+    setDoc(
+      doc(db, "userData", profileUid.current),
+      {
+        followers: [...followers],
+      },
+      { merge: true }
+    );
+    setDoc(
+      doc(db, "userData", ownUid.current),
+      {
+        following: [...following],
+      },
+      { merge: true }
+    );
+    setFollowingUser(false);
+    setFollowerCount(followerCount - 1);
+    toast({
+      title: "Success",
+      description: "Successfully unfollowed",
+      className: "text-primary",
+    });
+  };
+
+  return (
+    <div className="flex flex-col justify-center ml-auto mr-auto max-w-xl">
+      <Image
+        src="/banner.png"
+        width={700}
+        height={100}
+        alt="Banner Image"
+        style={{ objectFit: "cover", height: "200px", width: "700px" }}
+      />
+      {loading ? (
+        <span className="bg-card p-4 rounded-md mb-12">Loading...</span>
+      ) : (
+        <div>
+          <div className="flex flex-col bg-card p-4 rounded-md mb-12 relative top-[-10px] overflow-visible">
+            <Image
+              src={imageURL}
+              width={110}
+              height={110}
+              alt="Profile Pic"
+              style={{
+                objectFit: "cover",
+                height: "110px",
+                width: "110px",
+                borderRadius: "9999px",
+                position: "absolute",
+                top: "-50px",
+              }}
+            />
+            <span className="text-xl text-primary font-bold mt-12">
+              {username.current}
+            </span>
+            <span className="text-muted-foreground mb-4">
+              {gender}
+              <br />
+              {followerCount} Followers | {followingCount} Following
+            </span>
+            <span className="bg-muted p-2 rounded-md mb-3">{description}</span>
+            <span>Website: {website}</span>
+            {ownUid.current !== "" &&
+              !ownAccount.current &&
+              (followingUser ? (
+                <button
+                  className="bg-primary p-2 mt-8 rounded-md w-44 hover:bg-secondary"
+                  onClick={() => unfollowUser()}
+                >
+                  Unfollow
+                </button>
+              ) : (
+                <button
+                  className="bg-primary p-2 mt-8 rounded-md w-44 hover:bg-secondary"
+                  onClick={() => followUser()}
+                >
+                  Follow
+                </button>
+              ))}
+          </div>
+          {!ownAccount.current || <CreatePost />}
+        </div>
+      )}
+    </div>
+  );
+}

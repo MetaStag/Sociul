@@ -15,7 +15,7 @@ export default function CreatePost() {
 
   return (
     <Dialog>
-      <DialogTrigger className="bg-primary p-2 rounded-md max-w-44">
+      <DialogTrigger className="bg-primary p-2 rounded-md w-44 hover:bg-secondary">
         Create Post
       </DialogTrigger>
       <DialogContent>
@@ -39,7 +39,7 @@ export default function CreatePost() {
           />
         </div>
         <button
-          className="bg-primary p-2 rounded-md"
+          className="bg-primary p-2 rounded-md hover:bg-secondary"
           onClick={() => handleSubmit()}
         >
           Submit
