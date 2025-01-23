@@ -12,7 +12,7 @@ import {
   orderBy,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import Post from "@/components/post";
+import DisplayPost from "@/components/displayPost";
 import { useRouter } from "next/navigation";
 
 export default function Home() {
@@ -72,7 +72,7 @@ export default function Home() {
       ) : (
         <div>
           {posts.map((post) => (
-            <Post key={post.id} post={post} />
+            <DisplayPost key={post.id} post={post} />
           ))}
           {visible && (
             <button

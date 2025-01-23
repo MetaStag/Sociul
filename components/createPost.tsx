@@ -6,7 +6,12 @@ import {
   DialogTitle,
   DialogContent,
 } from "@/components/ui/dialog";
-import { doc, setDoc } from "firebase/firestore";
+import {
+  doc,
+  setDoc,
+  collection,
+  getCountFromServer,
+} from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 
@@ -38,13 +43,17 @@ export default function CreatePost(props: any) {
   const handleSubmit = async () => {
     const check = validation();
     if (!check) return;
+    const docSnap = await getCountFromServer(collection(db, "posts"));
+    let count = docSnap.data().count;
     const date = Date.now();
-    await setDoc(doc(db, "posts", `${date}`), {
+    await setDoc(doc(db, "posts", `${count + 1}`), {
       title: title,
       description: description,
       date: date,
       uid: props.uid,
       author: props.author,
+      likes: [],
+      comments: [{}],
     });
     toast({
       title: "Success",

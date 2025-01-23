@@ -15,9 +15,9 @@ import {
 } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
-import Post from "@/components/post";
+import DisplayPost from "@/components/displayPost";
 import { useToast } from "@/hooks/use-toast";
-import CreatePost from "@/app/createPost";
+import CreatePost from "@/components/createPost";
 
 export default function Profile({
   params,
@@ -230,7 +230,7 @@ export default function Profile({
           )}
           <div className="mt-12">
             {posts.map((post) => (
-              <Post key={post.id} post={post} />
+              <DisplayPost key={post.id} post={post} />
             ))}
           </div>
         </div>
