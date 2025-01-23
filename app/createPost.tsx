@@ -6,15 +6,56 @@ import {
   DialogTitle,
   DialogContent,
 } from "@/components/ui/dialog";
+import { doc, setDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { useToast } from "@/hooks/use-toast";
 
-export default function CreatePost() {
+export default function CreatePost(props: any) {
+  const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const { toast } = useToast();
 
-  const handleSubmit = () => {};
+  const validation = (): boolean => {
+    if (!title.trim()) {
+      toast({
+        title: "Invalid title",
+        description: "Title cannot be empty",
+        className: "text-destructive",
+      });
+      return false;
+    } else if (!description.trim()) {
+      toast({
+        title: "Invalid description",
+        description: "Description cannot be empty",
+        className: "text-destructive",
+      });
+      return false;
+    }
+    return true;
+  };
+
+  const handleSubmit = async () => {
+    const check = validation();
+    if (!check) return;
+    const date = Date.now();
+    await setDoc(doc(db, "posts", `${date}`), {
+      title: title,
+      description: description,
+      date: date,
+      uid: props.uid,
+      author: props.author,
+    });
+    toast({
+      title: "Success",
+      description: "Successfully created post!",
+      className: "text-primary",
+    });
+    setOpen(false);
+  };
 
   return (
-    <Dialog>
+    <Dialog defaultOpen={open}>
       <DialogTrigger className="bg-primary p-2 rounded-md w-44 hover:bg-secondary">
         Create Post
       </DialogTrigger>
@@ -35,7 +76,7 @@ export default function CreatePost() {
             rows={4}
             placeholder="Enter description..."
             className="bg-background border-2 outline-none focus:outline-primary p-2 rounded-md"
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => setDescription(e.target.value)}
           />
         </div>
         <button

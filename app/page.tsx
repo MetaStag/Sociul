@@ -1,95 +1,89 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Image from "next/image";
+import { useState, useEffect, useRef } from "react";
+import {
+  collection,
+  getDocs,
+  query,
+  limit,
+  DocumentData,
+  startAfter,
+  getCountFromServer,
+  orderBy,
+} from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import Post from "@/components/post";
 import { useRouter } from "next/navigation";
-import { doc, getDoc } from "firebase/firestore";
-import { auth, db } from "@/lib/firebase";
-import { onAuthStateChanged } from "firebase/auth";
-import { useToast } from "@/hooks/use-toast";
-import CreatePost from "./createPost";
 
 export default function Home() {
+  const totalCount = useRef(0);
+  const currentCount = useRef(0);
   const [loading, setLoading] = useState(true);
-  const [username, setUsername] = useState("");
-  const [description, setDescription] = useState("");
-  const [imageURL, setImageURL] = useState("");
-  const [gender, setGender] = useState("");
-  const [website, setWebsite] = useState("");
-  const [followers, setFollowers] = useState(0);
-  const [following, setFollowing] = useState(0);
+  const [visible, setVisible] = useState(true);
+  const [posts, setPosts] = useState<DocumentData[]>([]);
   const router = useRouter();
-  const { toast } = useToast();
 
   useEffect(() => {
-    onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        const docSnap = await getDoc(doc(db, "userData", user.uid));
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          setUsername(data.username);
-          setDescription(data.description);
-          setImageURL(data.imageURL);
-          setGender(data.gender);
-          setWebsite(data.website);
-          setFollowers(data.followers);
-          setFollowing(data.following);
-          setLoading(false);
-        } else {
-          toast({
-            title: "Error processing data",
-            description:
-              "It seems like you haven't set your user details, set them first",
-            className: "text-destructive",
-          });
-          router.push("/edit");
-        }
-      } else {
-        router.push("/login");
-      }
-    });
+    const getPosts = async () => {
+      let temp: DocumentData[] = [];
+      let tempPost;
+      const docSnap = await getCountFromServer(collection(db, "posts"));
+      totalCount.current = docSnap.data().count;
+      if (docSnap.data().count < 9) setVisible(false);
+      else currentCount.current = 9;
+      const q = query(collection(db, "posts"), limit(9));
+      const querySnapshot = await getDocs(q);
+      querySnapshot.forEach((post) => {
+        tempPost = post.data();
+        tempPost.id = post.id;
+        temp.push(tempPost);
+      });
+      setPosts(temp);
+      setLoading(false);
+    };
+    getPosts();
   }, []);
 
+  const load = async () => {
+    let temp: DocumentData[] = [];
+    let tempPost;
+    if (totalCount.current - currentCount.current < 9) setVisible(false);
+    const last = posts[posts.length - 1];
+    const q = query(
+      collection(db, "posts"),
+      orderBy("date"),
+      startAfter(last),
+      limit(9)
+    );
+    const querySnapshot = await getDocs(q);
+    querySnapshot.forEach((post) => {
+      tempPost = post.data();
+      tempPost.id = post.id;
+      temp.push(tempPost);
+    });
+    setPosts([...posts, ...temp]);
+  };
+
   return (
-    <div className="flex flex-col justify-center ml-auto mr-auto max-w-xl">
-      <Image
-        src="/banner.png"
-        width={700}
-        height={100}
-        alt="Banner Image"
-        style={{ objectFit: "cover", height: "200px", width: "700px" }}
-      />
+    <div className="flex flex-col max-w-xl ml-auto mr-auto mt-16">
+      <span className="text-4xl font-bold mb-8">Sociul</span>
       {loading ? (
-        <span className="bg-card p-4 rounded-md mb-12">Loading...</span>
+        <span>Loading...</span>
       ) : (
-        <div className="flex flex-col bg-card p-4 rounded-md mb-12 relative top-[-10px] overflow-visible">
-          <Image
-            src={imageURL}
-            width={110}
-            height={110}
-            alt="Profile Pic"
-            style={{
-              objectFit: "cover",
-              height: "110px",
-              width: "110px",
-              borderRadius: "9999px",
-              position: "absolute",
-              top: "-50px",
-            }}
-          />
-          <span className="text-xl text-primary font-bold mt-12">
-            {username}
-          </span>
-          <span className="text-muted-foreground mb-4">
-            {gender}
-            <br />
-            {followers} Followers | {following} Following
-          </span>
-          <span className="bg-muted p-2 rounded-md mb-3">{description}</span>
-          <span>Website: {website}</span>
+        <div>
+          {posts.map((post) => (
+            <Post key={post.id} post={post} />
+          ))}
+          {visible && (
+            <button
+              className="bg-primary p-2 rounded-md hover:bg-secondary my-16 w-full"
+              onClick={() => load()}
+            >
+              Load more posts
+            </button>
+          )}
         </div>
       )}
-      <CreatePost />
     </div>
   );
 }

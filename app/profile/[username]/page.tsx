@@ -3,9 +3,19 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { doc, collection, getDoc, getDocs, setDoc } from "firebase/firestore";
+import {
+  doc,
+  collection,
+  getDoc,
+  getDocs,
+  setDoc,
+  query,
+  limit,
+  DocumentData,
+} from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
+import Post from "@/components/post";
 import { useToast } from "@/hooks/use-toast";
 import CreatePost from "@/app/createPost";
 
@@ -26,6 +36,7 @@ export default function Profile({
   const [website, setWebsite] = useState("");
   const [followerCount, setFollowerCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
+  const [posts, setPosts] = useState<DocumentData[]>([]);
   const { toast } = useToast();
   const router = useRouter();
 
@@ -40,7 +51,7 @@ export default function Profile({
           return;
         }
       });
-      const querySnapshot = await getDocs(collection(db, "userData"));
+      let querySnapshot = await getDocs(collection(db, "userData"));
       querySnapshot.forEach((doc) => {
         if (username.current === doc.data().username) {
           found = true;
@@ -59,7 +70,20 @@ export default function Profile({
           setLoading(false);
         }
       });
-      if (!found) {
+      if (found) {
+        let tempPosts: DocumentData[] = [];
+        let tempPost;
+        const q = query(collection(db, "posts"), limit(9));
+        querySnapshot = await getDocs(q);
+        querySnapshot.forEach((post) => {
+          if (post.data().uid === profileUid.current) {
+            tempPost = post.data();
+            tempPost.id = post.id;
+            tempPosts.push(tempPost);
+          }
+        });
+        setPosts(tempPosts);
+      } else if (!found) {
         toast({
           title: "Invalid username",
           description: "No profile with this username exists",
@@ -158,7 +182,7 @@ export default function Profile({
         <span className="bg-card p-4 rounded-md mb-12">Loading...</span>
       ) : (
         <div>
-          <div className="flex flex-col bg-card p-4 rounded-md mb-12 relative top-[-10px] overflow-visible">
+          <div className="flex flex-col bg-card p-4 rounded-md mb-6 relative top-[-10px] overflow-visible">
             <Image
               src={imageURL}
               width={110}
@@ -201,7 +225,14 @@ export default function Profile({
                 </button>
               ))}
           </div>
-          {!ownAccount.current || <CreatePost />}
+          {!ownAccount.current || (
+            <CreatePost uid={ownUid.current} author={username.current} />
+          )}
+          <div className="mt-12">
+            {posts.map((post) => (
+              <Post key={post.id} post={post} />
+            ))}
+          </div>
         </div>
       )}
     </div>

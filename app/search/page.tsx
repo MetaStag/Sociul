@@ -68,7 +68,7 @@ export default function Search() {
       {profiles.map((profile) => (
         <div
           key={profile.username}
-          className="bg-card mt-2 p-8 rounded-xl flex flex-row gap-x-6 hover:bg-muted items-center"
+          className="flex flex-row bg-card mt-2 p-8 rounded-xl gap-x-6 hover:bg-muted items-center"
           onClick={() => router.push(`/profile/${profile.username}`)}
         >
           <Image
