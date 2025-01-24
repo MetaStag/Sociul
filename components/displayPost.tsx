@@ -118,7 +118,10 @@ export default function DisplayPost(props: any) {
       </span>
       <span
         className="text-muted-foreground underline cursor-pointer"
-        onClick={(e) => {e.stopPropagation();router.push(`/profile/${author}`)}}
+        onClick={(e) => {
+          e.stopPropagation();
+          router.push(`/profile/${author}`);
+        }}
       >
         by {author}
       </span>
