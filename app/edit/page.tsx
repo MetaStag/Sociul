@@ -17,6 +17,7 @@ import { doc, collection, getDoc, getDocs, setDoc } from "firebase/firestore";
 
 export default function Edit() {
   let originalUsername = useRef("");
+  const [firstTime, setFirstTime] = useState(true);
   const [username, setUsername] = useState("");
   const [description, setDescription] = useState("");
   const [imageURL, setImageURL] = useState("");
@@ -31,16 +32,18 @@ export default function Edit() {
         const docSnap = await getDoc(doc(db, "userData", user.uid));
         if (docSnap.exists()) {
           // if editing profile, pre-load old values
+          setFirstTime(false);
           const data = docSnap.data();
           console.log(data);
           setUsername(data.username);
           originalUsername.current = data.username;
-          originalUsername;
           setDescription(data.description);
+          setImageURL(data.imageURL);
           setGender(data.gender);
           setWebsite(data.website);
         } else {
           // if making new profile, dont pre-load any values
+          setFirstTime(true);
           return;
         }
       } else {
@@ -107,18 +110,26 @@ export default function Edit() {
     if (!check) return;
     const check2 = await IsUniqueUsername();
     if (!check2) return;
-
     const user = auth.currentUser;
     if (!user) return;
-    await setDoc(doc(db, "userData", user.uid), {
+
+    let newObj: any = {
       username: username,
       description: description,
       imageURL: imageURL,
       gender: gender,
       website: website,
-      followers: [],
-      following: [],
-    });
+    };
+    if (firstTime) {
+      // initialize followers and following if new account
+      newObj.followers = [];
+      newObj.following = [];
+      await setDoc(doc(db, "userData", user.uid), newObj);
+    } else {
+      await setDoc(doc(db, "userData", user.uid), newObj, {
+        merge: true,
+      });
+    }
     toast({
       title: "Success",
       description: "Successfully updated profile info",

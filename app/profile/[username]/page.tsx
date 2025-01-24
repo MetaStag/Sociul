@@ -30,10 +30,7 @@ export default function Profile({
   const [followingUser, setFollowingUser] = useState(false);
   const ownAccount = useRef(false);
   const [loading, setLoading] = useState(true);
-  const [description, setDescription] = useState("");
-  const [imageURL, setImageURL] = useState("");
-  const [gender, setGender] = useState("");
-  const [website, setWebsite] = useState("");
+  const [data, setData] = useState<any>({});
   const [followerCount, setFollowerCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
   const [posts, setPosts] = useState<DocumentData[]>([]);
@@ -59,14 +56,19 @@ export default function Profile({
             ownAccount.current = true;
           }
           const data = doc.data();
+          if (data.imageURL === "") {
+            data.imageURL =
+              "https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg";
+          }
+
           profileUid.current = doc.id;
-          setDescription(data.description);
-          setImageURL(data.imageURL);
-          setGender(data.gender);
-          setWebsite(data.website);
           setFollowerCount(data.followers.length);
           setFollowingCount(data.following.length);
           if (data.followers.includes(ownUid.current)) setFollowingUser(true);
+          delete data.username;
+          delete data.followers;
+          delete data.following;
+          setData(data);
           setLoading(false);
         }
       });
@@ -76,7 +78,7 @@ export default function Profile({
         const q = query(collection(db, "posts"), limit(9));
         querySnapshot = await getDocs(q);
         querySnapshot.forEach((post) => {
-          if (post.data().uid === profileUid.current) {
+          if (post.data().author === profileUid.current) {
             tempPost = post.data();
             tempPost.id = post.id;
             tempPosts.push(tempPost);
@@ -184,7 +186,7 @@ export default function Profile({
         <div>
           <div className="flex flex-col bg-card p-4 rounded-md mb-6 relative top-[-10px] overflow-visible">
             <Image
-              src={imageURL}
+              src={data.imageURL}
               width={110}
               height={110}
               alt="Profile picture"
@@ -201,12 +203,14 @@ export default function Profile({
               {username.current}
             </span>
             <span className="text-muted-foreground mb-4">
-              {gender}
+              {data.gender}
               <br />
               {followerCount} Followers | {followingCount} Following
             </span>
-            <span className="bg-muted p-2 rounded-md mb-3">{description}</span>
-            <span>Website: {website}</span>
+            <span className="bg-muted p-2 rounded-md mb-3">
+              {data.description}
+            </span>
+            <span>Website: {data.website}</span>
             {ownUid.current !== "" &&
               !ownAccount.current &&
               (followingUser ? (
@@ -229,9 +233,13 @@ export default function Profile({
             <CreatePost uid={ownUid.current} author={username.current} />
           )}
           <div className="mt-12">
-            {posts.map((post) => (
-              <DisplayPost key={post.id} post={post} />
-            ))}
+            {posts.length > 0 ? (
+              posts.map((post) => <DisplayPost key={post.id} post={post} />)
+            ) : (
+              <span className="flex bg-card p-4 rounded-xl justify-center">
+                No Posts yet
+              </span>
+            )}
           </div>
         </div>
       )}

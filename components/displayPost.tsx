@@ -17,6 +17,7 @@ import reshareIcon from "@/public/reshare.svg";
 
 export default function DisplayPost(props: any) {
   let uid = useRef("");
+  const [author, setAuthor] = useState("Anonymous");
   const [isLiked, setIsLiked] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
@@ -26,7 +27,9 @@ export default function DisplayPost(props: any) {
       if (user) uid.current = user.uid;
     });
     const check = async () => {
-      const docSnap = await getDoc(doc(db, "posts", props.post.id));
+      let docSnap = await getDoc(doc(db, "userData", props.post.author));
+      if (docSnap.exists()) setAuthor(docSnap.data().username);
+      docSnap = await getDoc(doc(db, "posts", props.post.id));
       if (docSnap.exists()) {
         const data = docSnap.data();
         for (let i = 0; i < data.likes.length; i++) {
@@ -92,7 +95,7 @@ export default function DisplayPost(props: any) {
 
   const reshare = async () => {
     let newPost = props.post;
-    newPost.author = props.post.author; // should be own username, not post
+    newPost.author = uid.current;
     newPost.date = Date.now();
     let docSnap = await getCountFromServer(collection(db, "posts"));
     const count = docSnap.data().count;
@@ -115,9 +118,9 @@ export default function DisplayPost(props: any) {
       </span>
       <span
         className="text-muted-foreground underline cursor-pointer"
-        onClick={() => router.push(`/profile/${props.post.author}`)}
+        onClick={(e) => {e.stopPropagation();router.push(`/profile/${author}`)}}
       >
-        by {props.post.author}
+        by {author}
       </span>
       <span className="text-muted-foreground">
         on {new Date(props.post.date).toDateString()}

@@ -6,11 +6,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "www.orangepet.in",
-      },
-      {
-        protocol: "https",
-        hostname: "images.pexels.com",
+        hostname: "**",
       },
     ],
   },

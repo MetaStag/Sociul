@@ -50,10 +50,9 @@ export default function CreatePost(props: any) {
       title: title,
       description: description,
       date: date,
-      uid: props.uid,
-      author: props.author,
+      author: props.uid,
       likes: [],
-      comments: [{}],
+      comments: [],
     });
     toast({
       title: "Success",

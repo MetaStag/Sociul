@@ -11,6 +11,7 @@ export default function Post({ params }: { params: Promise<{ id: string }> }) {
   let postid = useRef("");
   let uid = useRef("");
   const [isLoading, setIsLoading] = useState(true);
+  const [author, setAuthor] = useState("Anonymous");
   const [data, setData] = useState<DocumentData>({});
   const [comment, setComment] = useState("");
   const { toast } = useToast();
@@ -21,14 +22,18 @@ export default function Post({ params }: { params: Promise<{ id: string }> }) {
     });
     const getData = async () => {
       let id = (await params).id;
+      let temp = "";
       postid.current = id;
-      const docSnap = await getDoc(doc(db, "posts", id));
+      let docSnap = await getDoc(doc(db, "posts", id));
       if (docSnap.exists()) {
         let data = docSnap.data();
         data.id = id;
+        temp = data.author;
         setData(data);
         setIsLoading(false);
       }
+      docSnap = await getDoc(doc(db, "userData", temp));
+      if (docSnap.exists()) setAuthor(docSnap.data().username);
     };
     getData();
   }, []);
@@ -87,7 +92,7 @@ export default function Post({ params }: { params: Promise<{ id: string }> }) {
             key={data.comments.indexOf(comment)}
             className="flex flex-col bg-muted p-3 rounded-xl my-4 gap-y-3"
           >
-            <span className="text-primary">{comment.author}</span>
+            <span className="text-primary">{author} says</span>
             <span>{comment.body}</span>
           </div>
         ))}

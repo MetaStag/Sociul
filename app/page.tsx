@@ -13,7 +13,6 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import DisplayPost from "@/components/displayPost";
-import { useRouter } from "next/navigation";
 
 export default function Home() {
   const totalCount = useRef(0);
@@ -21,7 +20,6 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [visible, setVisible] = useState(true);
   const [posts, setPosts] = useState<DocumentData[]>([]);
-  const router = useRouter();
 
   useEffect(() => {
     const getPosts = async () => {
