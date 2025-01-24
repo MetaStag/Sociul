@@ -95,17 +95,23 @@ export default function DisplayPost(props: any) {
 
   const reshare = async () => {
     let newPost = props.post;
+    newPost.comments = [];
+    let username = "";
+    let authorName = await getDoc(doc(db, "userData", uid.current));
+    if (authorName.exists()) {
+      username = authorName.data().username;
+    }
     newPost.author = uid.current;
     newPost.date = Date.now();
     let docSnap = await getCountFromServer(collection(db, "posts"));
     const count = docSnap.data().count;
-    await setDoc(doc(db, "posts", `${count + 1}`), props.post);
+    await setDoc(doc(db, "posts", `${count + 1}`), newPost);
     toast({
       title: "Success",
       description: "Successfully reshared",
       className: "text-primary",
     });
-    router.push(`/profile/${props.post.author}`);
+    router.push(`/profile/${username}`);
   };
 
   return (
@@ -128,7 +134,7 @@ export default function DisplayPost(props: any) {
       <span className="text-muted-foreground">
         on {new Date(props.post.date).toDateString()}
       </span>
-      <span>{props.post.description}</span>
+      <span dangerouslySetInnerHTML={{ __html: props.post.description }}></span>
       <div className="flex flex-row mt-4 gap-x-2">
         <svg
           width="30px"

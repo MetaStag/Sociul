@@ -29,6 +29,9 @@ export default function Post({ params }: { params: Promise<{ id: string }> }) {
         let data = docSnap.data();
         data.id = id;
         temp = data.author;
+        data.comments.map((comment: any) => {
+          comment.author = getUsername(comment.author);
+        });
         setData(data);
         setIsLoading(false);
       }
@@ -37,6 +40,15 @@ export default function Post({ params }: { params: Promise<{ id: string }> }) {
     };
     getData();
   }, []);
+
+  const getUsername = async (uid: string) => {
+    const docSnap = await getDoc(doc(db, "userData", uid));
+    if (docSnap.exists()) {
+      return docSnap.data().username;
+    } else {
+      return "Anonymous";
+    }
+  };
 
   const handleSubmit = async () => {
     if (!comment.trim()) {
@@ -92,7 +104,7 @@ export default function Post({ params }: { params: Promise<{ id: string }> }) {
             key={data.comments.indexOf(comment)}
             className="flex flex-col bg-muted p-3 rounded-xl my-4 gap-y-3"
           >
-            <span className="text-primary">{author} says</span>
+            <span className="text-primary">{comment.author} says</span>
             <span>{comment.body}</span>
           </div>
         ))}

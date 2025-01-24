@@ -113,11 +113,10 @@ export default function Navbar() {
       >
         Sociul
       </span>
-      <div className="w-2/5 ml-32">
+      <div className="w-2/5 ml-32" ref={searchBox}>
         <input
           type="text"
           placeholder="Search..."
-          ref={searchBox}
           onChange={(e) => setSearchTerm(e.target.value)}
           onKeyDown={(e) => {
             if (e.code === "Enter") handleSearch();
