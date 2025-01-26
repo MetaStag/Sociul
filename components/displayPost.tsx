@@ -134,7 +134,7 @@ export default function DisplayPost(props: any) {
       <span className="text-muted-foreground">
         on {new Date(props.post.date).toDateString()}
       </span>
-      <span dangerouslySetInnerHTML={{ __html: props.post.description }}></span>
+      <span className="whitespace-pre-line">{props.post.description}</span>
       <div className="flex flex-row mt-4 gap-x-2">
         <svg
           width="30px"
