@@ -16,6 +16,7 @@ import { db } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 
 export default function CreatePost(props: any) {
+  const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const { toast } = useToast();
@@ -58,10 +59,11 @@ export default function CreatePost(props: any) {
       description: "Successfully created post!",
       className: "text-primary",
     });
+    setOpen(false);
   };
 
   return (
-    <Dialog>
+    <Dialog defaultOpen={open}>
       <DialogTrigger className="bg-primary p-2 rounded-md w-44 hover:bg-secondary">
         Create Post
       </DialogTrigger>
