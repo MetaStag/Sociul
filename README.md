@@ -5,7 +5,7 @@ A demo social media app.
 #### Tech-Stack
 - **Next.js** - Frontend
 - **Firebase** - Backend (as a service)
-- **Shadcn/ui** - UI Components
+- **Shadcn/ui** - UI Components 
 
 #### Features
 - **Login/Signup** using email/password or **google oauth**
