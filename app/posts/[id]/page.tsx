@@ -11,7 +11,6 @@ export default function Post({ params }: { params: Promise<{ id: string }> }) {
   let postid = useRef("");
   let uid = useRef("");
   const [isLoading, setIsLoading] = useState(true);
-  const [author, setAuthor] = useState("Anonymous");
   const [data, setData] = useState<DocumentData>({});
   const [comment, setComment] = useState("");
   const { toast } = useToast();
@@ -20,26 +19,23 @@ export default function Post({ params }: { params: Promise<{ id: string }> }) {
     onAuthStateChanged(auth, async (user) => {
       if (user) uid.current = user.uid;
     });
-    const getData = async () => {
-      let id = (await params).id;
-      let temp = "";
-      postid.current = id;
-      let docSnap = await getDoc(doc(db, "posts", id));
-      if (docSnap.exists()) {
-        let data = docSnap.data();
-        data.id = id;
-        temp = data.author;
-        data.comments.map((comment: any) => {
-          comment.author = getUsername(comment.author);
-        });
-        setData(data);
-        setIsLoading(false);
-      }
-      docSnap = await getDoc(doc(db, "userData", temp));
-      if (docSnap.exists()) setAuthor(docSnap.data().username);
-    };
     getData();
   }, []);
+
+  const getData = async () => {
+    let id = (await params).id;
+    postid.current = id;
+    let docSnap = await getDoc(doc(db, "posts", id));
+    if (docSnap.exists()) {
+      let data = docSnap.data();
+      data.id = id;
+      data.comments.map((comment: any) => {
+        comment.author = getUsername(comment.author);
+      });
+      setData(data);
+      setIsLoading(false);
+    }
+  };
 
   const getUsername = async (uid: string) => {
     const docSnap = await getDoc(doc(db, "userData", uid));
@@ -80,6 +76,8 @@ export default function Post({ params }: { params: Promise<{ id: string }> }) {
       description: "Successfully commented",
       className: "text-primary",
     });
+    setComment("");
+    getData();
   };
 
   return (
@@ -89,6 +87,7 @@ export default function Post({ params }: { params: Promise<{ id: string }> }) {
       <input
         type="text"
         placeholder="Leave a comment..."
+        value={comment}
         onChange={(e) => setComment(e.target.value)}
         className="bg-background border-2 outline-none focus:outline-primary p-2 rounded-md mb-4"
       />
